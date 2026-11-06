@@ -26,27 +26,51 @@ fn main() -> Result<(), Box<dyn Error>> {
      on a {}.", DeviceInfo::new()?.model());
 
     let mut led_group: Vec<rppal::gpio::OutputPin> = vec![];
-    led_group.push(Gpio::new()?.get(LED16R)?.into_output());
-    led_group.push(Gpio::new()?.get(LED17G)?.into_output());
-    led_group.push(Gpio::new()?.get(LED22B)?.into_output());
-    led_group.push(Gpio::new()?.get(LED23Y)?.into_output());
-    led_group.push(Gpio::new()?.get(LED24R)?.into_output());
-    led_group.push(Gpio::new()?.get(LED25G)?.into_output());
-    led_group.push(Gpio::new()?.get(LED26B)?.into_output());
     led_group.push(Gpio::new()?.get(LED27Y)?.into_output());
+    led_group.push(Gpio::new()?.get(LED26B)?.into_output());
+    led_group.push(Gpio::new()?.get(LED25G)?.into_output());
+    led_group.push(Gpio::new()?.get(LED24R)?.into_output());
+    led_group.push(Gpio::new()?.get(LED23Y)?.into_output());
+    led_group.push(Gpio::new()?.get(LED22B)?.into_output());
+    led_group.push(Gpio::new()?.get(LED17G)?.into_output());
+    led_group.push(Gpio::new()?.get(LED16R)?.into_output());
 
 
-    leds_left(&mut led_group, 600);
-    leds_right(&mut led_group, 600);
     leds_left(&mut led_group, 300);
     leds_right(&mut led_group, 300);
-    
+    leds_left(&mut led_group, 200);
+    leds_right(&mut led_group, 200);
+
+    // leds_byte(&mut led_group, 0x80);
+    // thread::sleep(Duration::from_millis(3000));
+    // leds_byte(&mut led_group, 0xF0);
+    // thread::sleep(Duration::from_millis(3000));
+    // leds_byte(&mut led_group, 0x07);
+    // thread::sleep(Duration::from_millis(3000));
+    // // This secton will count in binary 0-255 for 8 bits
+    // for num in 0..=255 {  
+    //     leds_byte(&mut led_group, num);
+    //     thread::sleep(Duration::from_millis(200));
+    // }
+    //   Clear leds
+    leds_byte(&mut led_group, 0x00);
+
+    for k in 0..10 {
+        let bytes: [u8; 7] = [0x81, 0x42, 0x24, 0x18, 0x24, 0x42, 0x81];
+        for byte in bytes {
+            leds_byte(&mut led_group, byte);
+            thread::sleep(Duration::from_millis(400));
+        }
+    }
+
+    leds_byte(&mut led_group, 0x00);
+
     println!("Done");
     Ok(())
 }
 
 fn leds_left(led_grp: &mut [rppal::gpio::OutputPin], duration: u64) {
-    for i in 0..led_grp.len(){
+    for i in (0..led_grp.len()).rev()  {
         led_grp[i].set_high();
         thread::sleep(Duration::from_millis(duration));
         led_grp[i].set_low();
@@ -54,12 +78,36 @@ fn leds_left(led_grp: &mut [rppal::gpio::OutputPin], duration: u64) {
 }
 
 fn leds_right(led_grp: &mut [rppal::gpio::OutputPin], duration: u64) {
-    for i in (0..led_grp.len()).rev() {
+    for i in 0..led_grp.len() {
         led_grp[i].set_high();
         thread::sleep(Duration::from_millis(duration));
         led_grp[i].set_low();
     }
 }
+
+fn leds_byte(led_grp: &mut [rppal::gpio::OutputPin], byte: u8){
+    let bits: Vec<u8> = (0..=7).rev()
+        .map(|i: i32| (byte >> i) & 1)
+        .collect();
+    println!("{:?}", bits); 
+    for i in 0..=7 {
+        if bits[i] == 1 {
+            led_grp[i].set_high();
+        } else {
+            led_grp[i].set_low();
+        }
+    }
+}
+
+// fn leds_collide(led_grp: &mut [rppal::gpio::OutputPin], duration: u64) {
+//     let bytes: [u8; 7] = [0x81, 0x42, 0x24, 0x18, 0x24, 0x42, 0x81];
+//     for byte in bytes {
+//         leds_byte(&mut led_grp, 0x00);
+//     }
+
+// }
+
+
 
 
     // // led_grp
